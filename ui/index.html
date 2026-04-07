@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GenAI Data Contract Generator</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --sidebar-bg: #1e1e2e;
+      --sidebar-text: #cdd6f4;
+      --sidebar-muted: #6c7086;
+      --sidebar-border: #313244;
+      --accent: #89b4fa;
+      --accent-hover: #74c7ec;
+      --danger: #f38ba8;
+      --success: #a6e3a1;
+      --warning: #fab387;
+      --content-bg: #ffffff;
+      --content-text: #1e1e2e;
+      --input-bg: #f5f5f5;
+      --input-border: #d1d5db;
+      --code-bg: #282c34;
+      --radius: 8px;
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --mono: "JetBrains Mono", "Fira Code", "Cascadia Code", monospace;
+    }
+
+    body {
+      font-family: var(--font);
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+      background: var(--content-bg);
+      color: var(--content-text);
+    }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      width: 420px;
+      min-width: 340px;
+      background: var(--sidebar-bg);
+      color: var(--sidebar-text);
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid var(--sidebar-border);
+      overflow-y: auto;
+    }
+
+    .sidebar-header {
+      padding: 24px 20px 16px;
+      border-bottom: 1px solid var(--sidebar-border);
+    }
+
+    .sidebar-header h1 {
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      color: var(--accent);
+    }
+
+    .sidebar-header p {
+      font-size: 0.75rem;
+      color: var(--sidebar-muted);
+      margin-top: 4px;
+    }
+
+    .sidebar-body { padding: 16px 20px; flex: 1; display: flex; flex-direction: column; gap: 14px; }
+
+    label {
+      display: block;
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--sidebar-muted);
+      margin-bottom: 6px;
+    }
+
+    select, input[type="text"] {
+      width: 100%;
+      background: #2a2a3e;
+      border: 1px solid var(--sidebar-border);
+      color: var(--sidebar-text);
+      border-radius: var(--radius);
+      padding: 8px 12px;
+      font-size: 0.85rem;
+      font-family: var(--font);
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    select:focus, input[type="text"]:focus { border-color: var(--accent); }
+
+    textarea {
+      width: 100%;
+      background: #2a2a3e;
+      border: 1px solid var(--sidebar-border);
+      color: var(--sidebar-text);
+      border-radius: var(--radius);
+      padding: 10px 12px;
+      font-size: 0.8rem;
+      font-family: var(--mono);
+      resize: vertical;
+      min-height: 220px;
+      outline: none;
+      line-height: 1.5;
+      transition: border-color 0.15s;
+    }
+    textarea:focus { border-color: var(--accent); }
+
+    .row { display: flex; gap: 10px; }
+    .row > div { flex: 1; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 10px 16px;
+      border-radius: var(--radius);
+      border: none;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+    .btn:active { transform: scale(0.98); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-primary { background: var(--accent); color: #1e1e2e; width: 100%; }
+    .btn-primary:hover:not(:disabled) { background: var(--accent-hover); }
+    .btn-secondary {
+      background: transparent;
+      border: 1px solid var(--sidebar-border);
+      color: var(--sidebar-text);
+      font-size: 0.78rem;
+      padding: 7px 12px;
+    }
+    .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+    .examples-row { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    /* ── MAIN CONTENT ── */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .output-header {
+      padding: 16px 24px;
+      border-bottom: 1px solid #e5e7eb;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .output-header h2 { font-size: 0.9rem; font-weight: 700; flex: 1; }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+    .badge-valid   { background: #dcfce7; color: #166534; }
+    .badge-invalid { background: #fee2e2; color: #991b1b; }
+    .badge-idle    { background: #f3f4f6; color: #6b7280; }
+
+    .meta-bar {
+      display: flex;
+      gap: 16px;
+      padding: 8px 24px;
+      background: #f9fafb;
+      border-bottom: 1px solid #e5e7eb;
+      font-size: 0.75rem;
+      color: #6b7280;
+      flex-wrap: wrap;
+    }
+    .meta-item { display: flex; align-items: center; gap: 4px; }
+    .meta-item strong { color: #374151; }
+
+    .output-body { flex: 1; overflow-y: auto; padding: 20px 24px; }
+
+    pre[class*="language-"] {
+      margin: 0;
+      border-radius: var(--radius);
+      font-size: 0.8rem;
+      line-height: 1.6;
+    }
+
+    .warnings-section {
+      margin-top: 16px;
+      padding: 12px 16px;
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      border-radius: var(--radius);
+    }
+    .warnings-section h3 { font-size: 0.78rem; font-weight: 700; color: #92400e; margin-bottom: 6px; }
+    .warnings-section ul { padding-left: 16px; }
+    .warnings-section li { font-size: 0.78rem; color: #78350f; line-height: 1.6; }
+
+    .errors-section {
+      margin-top: 16px;
+      padding: 12px 16px;
+      background: #fef2f2;
+      border: 1px solid #fca5a5;
+      border-radius: var(--radius);
+    }
+    .errors-section h3 { font-size: 0.78rem; font-weight: 700; color: #991b1b; margin-bottom: 6px; }
+    .errors-section ul { padding-left: 16px; }
+    .errors-section li { font-size: 0.78rem; color: #7f1d1d; line-height: 1.6; }
+
+    .empty-state {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      color: #9ca3af;
+    }
+    .empty-state .icon { font-size: 3rem; }
+    .empty-state p { font-size: 0.85rem; }
+
+    /* Spinner */
+    .spinner {
+      width: 16px; height: 16px;
+      border: 2px solid rgba(0,0,0,0.15);
+      border-top-color: #1e1e2e;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      display: inline-block;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #1e1e2e;
+      color: #cdd6f4;
+      padding: 10px 18px;
+      border-radius: var(--radius);
+      font-size: 0.82rem;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      animation: fadein 0.2s ease, fadeout 0.3s ease 2s forwards;
+      z-index: 999;
+    }
+    @keyframes fadein  { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+    @keyframes fadeout { from { opacity: 1; } to { opacity: 0; } }
+
+    @media (max-width: 800px) {
+      body { flex-direction: column; height: auto; overflow: auto; }
+      .sidebar { width: 100%; min-width: unset; }
+      .main { min-height: 60vh; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── SIDEBAR ── -->
+<aside class="sidebar">
+  <div class="sidebar-header">
+    <h1>⚡ Data Contract Generator</h1>
+    <p>Powered by Claude AI · datacontract.com 0.9.3</p>
+  </div>
+
+  <div class="sidebar-body">
+
+    <!-- Format -->
+    <div>
+      <label for="fmt-select">Input Format</label>
+      <select id="fmt-select">
+        <option value="ddl">SQL DDL</option>
+        <option value="json_schema">JSON Schema</option>
+        <option value="column_list">Column List (JSON)</option>
+      </select>
+    </div>
+
+    <!-- Input -->
+    <div>
+      <label for="input-area">Input</label>
+      <textarea id="input-area" placeholder="Paste your SQL DDL, JSON Schema, or column list here..."></textarea>
+    </div>
+
+    <!-- Optional fields -->
+    <div class="row">
+      <div>
+        <label for="owner-input">Owner (optional)</label>
+        <input type="text" id="owner-input" placeholder="team@company.com" />
+      </div>
+      <div>
+        <label for="domain-input">Domain (optional)</label>
+        <input type="text" id="domain-input" placeholder="orders" />
+      </div>
+    </div>
+
+    <!-- Examples -->
+    <div>
+      <label>Load Example</label>
+      <div class="examples-row" id="examples-row">
+        <button class="btn btn-secondary" onclick="loadExamples()">⟳ Fetch Examples</button>
+      </div>
+    </div>
+
+    <!-- Generate -->
+    <button class="btn btn-primary" id="generate-btn" onclick="generate()">
+      <span id="btn-icon">▶</span>
+      <span id="btn-label">Generate Contract</span>
+    </button>
+
+  </div>
+</aside>
+
+<!-- ── MAIN ── -->
+<main class="main">
+  <div class="output-header">
+    <h2>Generated Contract</h2>
+    <span id="valid-badge" class="badge badge-idle">● Idle</span>
+    <button class="btn btn-secondary" id="copy-btn" onclick="copyYaml()" style="display:none">
+      ⧉ Copy YAML
+    </button>
+  </div>
+
+  <div class="meta-bar" id="meta-bar" style="display:none">
+    <span class="meta-item">Model: <strong id="m-model">—</strong></span>
+    <span class="meta-item">Tokens: <strong id="m-tokens">—</strong></span>
+    <span class="meta-item">Latency: <strong id="m-latency">—</strong></span>
+    <span class="meta-item">Retries: <strong id="m-retries">—</strong></span>
+    <span class="meta-item">Layer: <strong id="m-layer">—</strong></span>
+    <span class="meta-item">Columns: <strong id="m-cols">—</strong></span>
+  </div>
+
+  <div class="output-body" id="output-body">
+    <div class="empty-state">
+      <div class="icon">📄</div>
+      <p>Your generated data contract will appear here.</p>
+      <p>Paste input on the left and click <strong>Generate Contract</strong>.</p>
+    </div>
+  </div>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+<script>
+const API = '';  // same origin
+
+let lastYaml = '';
+
+function toast(msg) {
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 2600);
+}
+
+async function generate() {
+  const fmt     = document.getElementById('fmt-select').value;
+  const raw     = document.getElementById('input-area').value.trim();
+  const owner   = document.getElementById('owner-input').value.trim() || undefined;
+  const domain  = document.getElementById('domain-input').value.trim() || undefined;
+
+  if (!raw) { toast('Please enter some input first.'); return; }
+
+  setLoading(true);
+
+  let content = raw;
+  if (fmt === 'json_schema' || fmt === 'column_list') {
+    try { content = JSON.parse(raw); } catch (_) { content = raw; }
+  }
+
+  const body = {
+    input_format: fmt,
+    content,
+    options: { owner, domain }
+  };
+
+  try {
+    const res = await fetch(`${API}/api/v1/contracts/generate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+
+    if (res.status === 429) {
+      const d = await res.json();
+      toast(`Rate limited. Retry in ${d.retry_after_seconds}s.`);
+      return;
+    }
+    if (!res.ok) {
+      const d = await res.json().catch(() => ({}));
+      throw new Error(d.detail || `HTTP ${res.status}`);
+    }
+
+    const data = await res.json();
+    renderResult(data);
+  } catch (err) {
+    renderError(err.message);
+  } finally {
+    setLoading(false);
+  }
+}
+
+function renderResult(data) {
+  lastYaml = data.contract_yaml || '';
+  const valid = data.validation?.is_valid;
+  const errors = data.validation?.errors || [];
+  const warnings = data.validation?.warnings || [];
+  const meta = data.metadata || {};
+  const ps = data.parsed_schema || {};
+
+  // Badge
+  const badge = document.getElementById('valid-badge');
+  if (valid) {
+    badge.className = 'badge badge-valid'; badge.textContent = '✓ Valid';
+  } else {
+    badge.className = 'badge badge-invalid'; badge.textContent = '✗ Invalid';
+  }
+
+  // Meta bar
+  document.getElementById('meta-bar').style.display = 'flex';
+  document.getElementById('m-model').textContent   = meta.model || '—';
+  document.getElementById('m-tokens').textContent  = meta.tokens_used ?? '—';
+  document.getElementById('m-latency').textContent = meta.latency_ms ? `${meta.latency_ms.toFixed(0)}ms` : '—';
+  document.getElementById('m-retries').textContent = meta.retry_count ?? '0';
+  document.getElementById('m-layer').textContent   = ps.detected_layer || '—';
+  document.getElementById('m-cols').textContent    = ps.column_count ?? '—';
+
+  // Copy button
+  document.getElementById('copy-btn').style.display = 'inline-flex';
+
+  // Output
+  let html = `<pre class="language-yaml"><code class="language-yaml">${escapeHtml(lastYaml)}</code></pre>`;
+
+  if (errors.length) {
+    html += `<div class="errors-section"><h3>⛔ Validation Errors</h3><ul>${errors.map(e => `<li>${escapeHtml(e)}</li>`).join('')}</ul></div>`;
+  }
+  if (warnings.length) {
+    html += `<div class="warnings-section"><h3>⚠ Warnings</h3><ul>${warnings.map(w => `<li>${escapeHtml(w)}</li>`).join('')}</ul></div>`;
+  }
+
+  document.getElementById('output-body').innerHTML = html;
+  Prism.highlightAll();
+}
+
+function renderError(msg) {
+  const badge = document.getElementById('valid-badge');
+  badge.className = 'badge badge-invalid';
+  badge.textContent = '✗ Error';
+  document.getElementById('output-body').innerHTML =
+    `<div class="errors-section"><h3>⛔ Error</h3><ul><li>${escapeHtml(msg)}</li></ul></div>`;
+}
+
+function setLoading(on) {
+  const btn = document.getElementById('generate-btn');
+  const icon = document.getElementById('btn-icon');
+  const lbl  = document.getElementById('btn-label');
+  btn.disabled = on;
+  if (on) {
+    icon.innerHTML = '<span class="spinner"></span>';
+    lbl.textContent = 'Generating…';
+  } else {
+    icon.textContent = '▶';
+    lbl.textContent  = 'Generate Contract';
+  }
+}
+
+async function copyYaml() {
+  if (!lastYaml) return;
+  try {
+    await navigator.clipboard.writeText(lastYaml);
+    toast('✓ YAML copied to clipboard!');
+  } catch (_) {
+    toast('Copy failed — please select text manually.');
+  }
+}
+
+async function loadExamples() {
+  try {
+    const res = await fetch(`${API}/api/v1/contracts/examples`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const examples = await res.json();
+
+    const row = document.getElementById('examples-row');
+    row.innerHTML = '';
+    examples.forEach(ex => {
+      const btn = document.createElement('button');
+      btn.className = 'btn btn-secondary';
+      btn.textContent = ex.name.replace('input_', '').replace(/_/g, ' ');
+      btn.title = ex.description;
+      btn.onclick = () => {
+        document.getElementById('fmt-select').value = ex.input_format;
+        const content = typeof ex.content === 'string'
+          ? ex.content
+          : JSON.stringify(ex.content, null, 2);
+        document.getElementById('input-area').value = content;
+        toast(`Loaded: ${ex.name}`);
+      };
+      row.appendChild(btn);
+    });
+
+    if (!examples.length) {
+      row.innerHTML = '<span style="font-size:0.75rem;color:var(--sidebar-muted)">No examples found.</span>';
+    }
+  } catch (err) {
+    toast(`Failed to load examples: ${err.message}`);
+  }
+}
+
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+// Auto-load examples on page load
+window.addEventListener('DOMContentLoaded', () => {
+  loadExamples();
+});
+
+// Keyboard shortcut: Ctrl+Enter / Cmd+Enter to generate
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') generate();
+});
+</script>
+</body>
+</html>
