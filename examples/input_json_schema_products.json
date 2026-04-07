@@ -1,0 +1,73 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "gold_products",
+  "title": "gold_products",
+  "description": "Product catalog master data for the gold analytics layer",
+  "type": "object",
+  "required": ["product_id", "sku", "name", "price", "category", "is_active", "created_at"],
+  "properties": {
+    "product_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Unique product identifier (UUID v4)"
+    },
+    "sku": {
+      "type": "string",
+      "description": "Stock keeping unit code"
+    },
+    "name": {
+      "type": "string",
+      "description": "Product display name"
+    },
+    "description": {
+      "type": "string",
+      "description": "Long-form product description"
+    },
+    "price": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Retail price in the base currency"
+    },
+    "cost_price": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Supplier cost price"
+    },
+    "category": {
+      "type": "string",
+      "description": "Top-level product category"
+    },
+    "subcategory": {
+      "type": "string",
+      "description": "Product subcategory"
+    },
+    "brand": {
+      "type": "string",
+      "description": "Brand or manufacturer name"
+    },
+    "weight_kg": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Product weight in kilograms"
+    },
+    "is_active": {
+      "type": "boolean",
+      "description": "Whether the product is currently available for sale"
+    },
+    "stock_quantity": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Current stock count"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Product creation timestamp"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last modification timestamp"
+    }
+  }
+}

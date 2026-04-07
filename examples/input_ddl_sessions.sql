@@ -1,0 +1,22 @@
+CREATE TABLE silver_sessions (
+    session_id      VARCHAR(36)     NOT NULL,
+    user_id         BIGINT,
+    anonymous_id    VARCHAR(64),
+    page_url        VARCHAR(2048)   NOT NULL,
+    page_title      VARCHAR(512),
+    referrer_url    VARCHAR(2048),
+    utm_source      VARCHAR(255),
+    utm_medium      VARCHAR(255),
+    utm_campaign    VARCHAR(255),
+    device_type     VARCHAR(50),
+    browser         VARCHAR(100),
+    os              VARCHAR(100),
+    country_code    VARCHAR(2),
+    click_count     INTEGER         NOT NULL DEFAULT 0,
+    scroll_depth    NUMERIC(5, 2),
+    duration_seconds INTEGER,
+    is_bounce       BOOLEAN         NOT NULL DEFAULT FALSE,
+    started_at      TIMESTAMP       NOT NULL,
+    ended_at        TIMESTAMP,
+    PRIMARY KEY (session_id)
+);

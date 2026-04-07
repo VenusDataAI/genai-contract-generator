@@ -1,0 +1,70 @@
+app:
+  title: "GenAI Data Contract Generator"
+  version: "0.1.0"
+  description: "Generate production-ready data contracts from DDL, JSON Schema, or column lists using Claude AI"
+
+api:
+  prefix: "/api/v1"
+  cors_origins:
+    - "http://localhost:8000"
+    - "http://127.0.0.1:8000"
+
+rate_limiter:
+  max_requests: 10
+  window_seconds: 60
+
+contract:
+  datacontract_spec_version: "0.9.3"
+  default_owner: "data-team@company.com"
+  retry_max: 2
+
+sla_defaults:
+  bronze:
+    freshness_hours: 2
+  silver:
+    freshness_hours: 4
+  gold:
+    freshness_hours: 8
+  unknown:
+    freshness_hours: 24
+
+pii_column_patterns:
+  - email
+  - phone
+  - cpf
+  - ssn
+  - name
+  - address
+  - birth
+  - gender
+  - nationality
+
+tag_inference:
+  finance:
+    - amount
+    - price
+    - revenue
+    - cost
+    - payment
+    - billing
+    - invoice
+    - tax
+  analytics:
+    - session
+    - page
+    - click
+    - view
+    - event
+    - impression
+    - funnel
+  identity:
+    - user_id
+    - customer_id
+    - account_id
+    - profile
+  logistics:
+    - order
+    - shipment
+    - delivery
+    - tracking
+    - warehouse

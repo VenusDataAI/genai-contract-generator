@@ -1,0 +1,120 @@
+dataContractSpecification: "0.9.3"
+id: "urn:datacontract:orders:silver_orders"
+info:
+  title: "Silver Orders"
+  version: "1.0.0"
+  owner: "orders-team@company.com"
+  domain: "orders"
+  description: "Data contract for the silver_orders table in the silver layer."
+
+models:
+  silver_orders:
+    description: "Cleaned and enriched order records in the silver processing layer."
+    fields:
+      order_id:
+        type: string
+        required: true
+        description: "Unique identifier for each order (UUID v4). Primary key."
+      user_id:
+        type: long
+        required: true
+        description: "Reference to the user who placed the order."
+      customer_email:
+        type: string
+        required: true
+        description: "Email address of the customer. Contains personally identifiable information (PII)."
+        pii: true
+      status:
+        type: string
+        required: true
+        description: "Current lifecycle status of the order (e.g., pending, confirmed, shipped, delivered, cancelled)."
+        default: "pending"
+      total_amount:
+        type: decimal
+        required: true
+        description: "Total monetary value of the order including all items."
+      discount_amount:
+        type: decimal
+        required: false
+        description: "Total discount applied to the order."
+      tax_amount:
+        type: decimal
+        required: false
+        description: "Tax amount charged on the order."
+      currency_code:
+        type: string
+        required: true
+        description: "ISO 4217 currency code for the monetary values (e.g., BRL, USD)."
+        default: "BRL"
+      payment_method:
+        type: string
+        required: false
+        description: "Payment method used (e.g., credit_card, pix, boleto)."
+      is_gift:
+        type: boolean
+        required: true
+        description: "Indicates whether the order is flagged as a gift."
+        default: "false"
+      notes:
+        type: string
+        required: false
+        description: "Optional free-text notes added by the customer or support team."
+      created_at:
+        type: timestamp
+        required: true
+        description: "Timestamp when the order was created."
+      updated_at:
+        type: timestamp
+        required: false
+        description: "Timestamp of the last update to the order record."
+      shipped_at:
+        type: timestamp
+        required: false
+        description: "Timestamp when the order was dispatched for shipping."
+
+quality:
+  rules:
+    - type: not_null
+      column: order_id
+    - type: unique
+      column: order_id
+    - type: regex
+      column: order_id
+      pattern: "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    - type: not_null
+      column: user_id
+    - type: unique
+      column: user_id
+    - type: not_null
+      column: customer_email
+    - type: regex
+      column: customer_email
+      pattern: "^[a-zA-Z0-9._%+\\-]+@[a-zA-Z0-9.\\-]+\\.[a-zA-Z]{2,}$"
+    - type: not_null
+      column: status
+    - type: not_null
+      column: total_amount
+    - type: min
+      column: total_amount
+      value: 0
+    - type: min
+      column: discount_amount
+      value: 0
+    - type: min
+      column: tax_amount
+      value: 0
+    - type: not_null
+      column: currency_code
+    - type: not_null
+      column: is_gift
+    - type: not_null
+      column: created_at
+
+sla:
+  freshness_hours: 4
+  support_contact: "orders-team@company.com"
+  tier: "silver"
+
+tags:
+  - finance
+  - logistics
