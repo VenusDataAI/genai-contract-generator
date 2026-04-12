@@ -1,6 +1,6 @@
 # GenAI Data Contract Generator
 
-Generate production-ready [datacontract.com](https://datacontract.com) 0.9.3 YAML contracts from SQL DDL, JSON Schema, or plain column lists — powered by Claude AI.
+Generate production-ready [datacontract.com](https://datacontract.com) 0.9.3 YAML contracts from SQL DDL, JSON Schema, or plain column lists, powered by Claude AI.
 
 ## Quickstart (3 commands)
 
@@ -178,7 +178,7 @@ The `PromptBuilder` applies a keyword heuristic to every column name. If the low
 | `gender` | `gender`, `gender_identity` |
 | `nationality` | `nationality` |
 
-This is intentionally conservative — false positives are preferable to missed PII fields.
+This is intentionally conservative: false positives are preferable to missed PII fields.
 
 ---
 
@@ -280,10 +280,10 @@ The app reads `.env` via `python-dotenv` automatically on startup.
 ## Tech stack
 
 - **Python 3.11+**
-- **FastAPI** + **Uvicorn** — ASGI web framework
-- **Anthropic Python SDK** — Claude integration
-- **sqlglot** — SQL DDL parsing
-- **Pydantic v2** — data validation
-- **PyYAML** — YAML parsing/serialization
-- **structlog** — structured JSON-friendly logging
-- **pytest** + **pytest-mock** — test suite
+- **FastAPI** + **Uvicorn**: ASGI web framework
+- **Anthropic Python SDK**: Claude integration
+- **sqlglot**: SQL DDL parsing
+- **Pydantic v2**: data validation
+- **PyYAML**: YAML parsing/serialization
+- **structlog**: structured JSON-friendly logging
+- **pytest** + **pytest-mock**: test suite
